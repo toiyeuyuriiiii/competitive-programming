@@ -63,23 +63,23 @@ $flags = @(
     "-D_GLIBCXX_DEBUG", "-Wl,--stack,1073741824"
 )
 
+$errLog = Join-Path $env:TEMP "gpp_err_$([guid]::NewGuid().ToString('N')).txt"
+$argList = $flags + @($src, "-o", $exe)
+
 $buildSw = [System.Diagnostics.Stopwatch]::StartNew()
-$job = Start-Job -ScriptBlock {
-    param($f, $s, $e)
-    $out = & g++ $f $s -o $e 2>&1
-    return @{ Code = $LASTEXITCODE; Output = $out }
-} -ArgumentList $flags, $src, $exe
+$buildProc = Start-Process -FilePath "g++" -ArgumentList $argList -RedirectStandardError $errLog -NoNewWindow -PassThru
+$buildHandle = $buildProc.Handle
 
 $frames = @(0x280B, 0x2819, 0x2839, 0x2838, 0x283C, 0x2834, 0x2826, 0x2827, 0x2807, 0x280F) | ForEach-Object { [char]$_ }
 $idx = 0
 [Console]::CursorVisible = $false
 
 try {
-    while ($job.State -eq "Running") {
+    while (-not $buildProc.HasExited) {
         $elapsedMs = $buildSw.ElapsedMilliseconds
         $frame = $frames[$idx % $frames.Length]
         Write-Host ("`r{0} [BUILD] Compiling {1}... ({2} ms)   " -f $frame, $fileName, $elapsedMs) -NoNewline -ForegroundColor Cyan
-        Start-Sleep -Milliseconds 80
+        Start-Sleep -Milliseconds 50
         $idx++
     }
 }
@@ -87,19 +87,29 @@ finally {
     [Console]::CursorVisible = $true
 }
 
+$buildProc.WaitForExit()
 $buildSw.Stop()
-$result = Receive-Job -Job $job
-Remove-Job -Job $job
+$buildCode = $buildProc.ExitCode
+$buildProc.Dispose()
 $buildMs = $buildSw.ElapsedMilliseconds
 
 Write-Host ("`r" + (" " * 65) + "`r") -NoNewline
 
-if ($result.Code -ne 0) {
-    Write-Host ("[BUILD FAILED] Compilation failed in {0} ms (Exit Code: {1})" -f $buildMs, $result.Code) -ForegroundColor Red
-    if ($result.Output) {
-        $result.Output | ForEach-Object { Write-Host $_ }
+if ($buildCode -ne 0) {
+    Write-Host ("[BUILD FAILED] Compilation failed in {0} ms (Exit Code: {1})" -f $buildMs, $buildCode) -ForegroundColor Red
+    if (Test-Path $errLog) {
+        Get-Content $errLog | ForEach-Object { Write-Host $_ }
+        Remove-Item $errLog -Force
     }
-    exit $result.Code
+    exit $buildCode
+}
+
+if (Test-Path $errLog) {
+    $warnings = Get-Content $errLog
+    if ($warnings) {
+        $warnings | ForEach-Object { Write-Host $_ -ForegroundColor Yellow }
+    }
+    Remove-Item $errLog -Force
 }
 
 Write-Host ("[BUILD OK] Compiled {0} in {1} ms" -f $fileName, $buildMs) -ForegroundColor Green

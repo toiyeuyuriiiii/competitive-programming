@@ -24,20 +24,24 @@ using pll = pair<ll, ll>;
 const char el = '\n';
 
 // mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
-//
-// int Randint(int minium, int maxium){
+
+// int Randint(int minium, int maxium)
+// {
 //     return uniform_int_distribution<int>(minium, maxium)(rng);
 // }
-//
-// ll Randll(ll minium, ll maxium){
+
+// ll Randll(ll minium, ll maxium)
+// {
 //     return uniform_int_distribution<ll>(minium, maxium)(rng);
 // }
-//
-// int Randvectorint(const vi& a){
+
+// int Randvectorint(const vi &a)
+// {
 //     return a[Randint(0, sz(a) - 1)];
 // }
-//
-// ll Randvectorll(const vll& a){
+
+// ll Randvectorll(const vll &a)
+// {
 //     return a[Randint(0, sz(a) - 1)];
 // }
 
