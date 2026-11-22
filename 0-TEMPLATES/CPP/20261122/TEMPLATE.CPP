@@ -23,45 +23,49 @@ using pll = pair<ll, ll>;
 
 const char el = '\n';
 
-//mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
+// mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
 //
-//int Randint(int minium, int maxium){
-//    return uniform_int_distribution<int>(minium, maxium)(rng);
-//}
+// int Randint(int minium, int maxium){
+//     return uniform_int_distribution<int>(minium, maxium)(rng);
+// }
 //
-//ll Randll(ll minium, ll maxium){
-//    return uniform_int_distribution<ll>(minium, maxium)(rng);
-//}
+// ll Randll(ll minium, ll maxium){
+//     return uniform_int_distribution<ll>(minium, maxium)(rng);
+// }
 //
-//int Randvectorint(const vi& a){
-//    return a[Randint(0, sz(a) - 1)];
-//}
+// int Randvectorint(const vi& a){
+//     return a[Randint(0, sz(a) - 1)];
+// }
 //
-//ll Randvectorll(const vll& a){
-//    return a[Randint(0, sz(a) - 1)];
-//}
+// ll Randvectorll(const vll& a){
+//     return a[Randint(0, sz(a) - 1)];
+// }
 
-void InitIO(){
+void InitIO()
+{
     ios_base::sync_with_stdio(false);
     cin.tie(nullptr);
 }
 
-void FileIO(const string& filename = ""){
-    if(fopen((filename +".INP").c_str(), "r")){
+void FileIO(const string &filename = "")
+{
+    if (fopen((filename + ".INP").c_str(), "r"))
+    {
         freopen((filename + ".INP").c_str(), "r", stdin);
         freopen((filename + ".OUT").c_str(), "w", stdout);
     }
 }
 
-void Read(){
-
+void Read()
+{
 }
 
-void Solve(){
-
+void Solve()
+{
 }
 
-signed main(){
+signed main()
+{
     InitIO();
     FileIO("");
     Read();
