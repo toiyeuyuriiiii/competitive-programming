@@ -68,7 +68,6 @@ $argList = $flags + @($src, "-o", $exe)
 
 $buildSw = [System.Diagnostics.Stopwatch]::StartNew()
 $buildProc = Start-Process -FilePath "g++" -ArgumentList $argList -RedirectStandardError $errLog -NoNewWindow -PassThru
-$buildHandle = $buildProc.Handle
 
 $frames = @(0x280B, 0x2819, 0x2839, 0x2838, 0x283C, 0x2834, 0x2826, 0x2827, 0x2807, 0x280F) | ForEach-Object { [char]$_ }
 $idx = 0
