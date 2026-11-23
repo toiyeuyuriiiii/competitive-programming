@@ -66,13 +66,13 @@ void Read()
 
 void Solve()
 {
-    
+
 }
 
 signed main()
 {
     InitIO();
-    FileIO("");
+    FileIO("1");
     Read();
     Solve();
     return 0;
