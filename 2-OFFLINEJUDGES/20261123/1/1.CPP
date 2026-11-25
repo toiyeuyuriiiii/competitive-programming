@@ -60,13 +60,31 @@ void FileIO(const string &filename = "")
     }
 }
 
+struct Point{
+    ll x, y;
+};
+
+Point p[3];
+
 void Read()
 {
+    REP(i, 3) cin >> p[i].x >> p[i].y;    
+}
+
+__int128 Dist(const Point& a, const Point& b){
+    __int128 dx = a.x - b.x;
+    __int128 dy = a.y - b.y;
+    return dx * dx + dy * dy;
 }
 
 void Solve()
 {
-
+    __int128 d01 = Dist(p[0], p[1]);
+    __int128 d02 = Dist(p[0], p[2]);
+    __int128 d12 = Dist(p[1], p[2]);
+    if (d01 >= d12 && d01 >= d02) cout << p[0].x << ' ' << p[0].y << ' ' << p[1].x << ' ' << p[1].y;
+    else if (d12 >= d01 && d12 >= d02) cout << p[1].x << ' ' << p[1].y << ' ' << p[2].x << ' ' << p[2].y;
+    else cout << p[0].x << ' ' << p[0].y << ' ' << p[2].x << ' ' << p[2].y;
 }
 
 signed main()
