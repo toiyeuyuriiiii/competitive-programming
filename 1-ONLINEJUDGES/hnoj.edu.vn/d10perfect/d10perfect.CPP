@@ -61,7 +61,7 @@ void FileIO(const string &filename = "")
 }
 
 const int MAXN = 1007;
-int N, M; 
+int N, M;
 vector<bitset<MAXN>> adj;
 
 void Read()
@@ -80,14 +80,20 @@ void Read()
 void Solve()
 {
     vector<bitset<MAXN>> validadj;
-    FOR(i, 1, N) if (adj[i].count() >= 3) validadj.pb(adj[i]);
+    FOR(i, 1, N)
+    if (adj[i].count() >= 3) validadj.pb(adj[i]);
     int k = sz(validadj);
-    REP(i, k){
-        FOR(j, i + 1, k - 1){
+    REP(i, k)
+    {
+        FOR(j, i + 1, k - 1)
+        {
             bitset<MAXN> ab = validadj[i] & validadj[j];
-            if (ab.count() >= 3){
-                FOR(l, j + 1, k - 1){
-                    if ((ab & validadj[l]).count() >= 3){
+            if (ab.count() >= 3)
+            {
+                FOR(l, j + 1, k - 1)
+                {
+                    if ((ab & validadj[l]).count() >= 3)
+                    {
                         cout << "YES";
                         return;
                     }
