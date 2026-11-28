@@ -46,6 +46,15 @@ public class Win32Mem {
         }
         return 0;
     }
+
+    public static ulong GetCurrentWorkingSet(IntPtr handle) {
+        PROCESS_MEMORY_COUNTERS pmc = new PROCESS_MEMORY_COUNTERS();
+        pmc.cb = (uint)Marshal.SizeOf(typeof(PROCESS_MEMORY_COUNTERS));
+        if (GetProcessMemoryInfo(handle, out pmc, pmc.cb)) {
+            return (ulong)pmc.WorkingSetSize;
+        }
+        return 0;
+    }
 }
 "@
 
@@ -113,23 +122,62 @@ if (Test-Path $errLog) {
 
 Write-Host ("[BUILD OK] Compiled {0} in {1} ms" -f $fileName, $buildMs) -ForegroundColor Green
 
+$esc = [char]27
 Write-Host "[RUN] Executing binary..." -ForegroundColor Cyan
-Write-Host "`n================ PROGRAM I/O ================" -ForegroundColor DarkGray
+$statusRow = [Console]::CursorTop + 1
+Write-Host "  [LIVE] Time: 0 ms | RAM: 0.00 MB (Peak: 0.00 MB / 1024 MB)" -ForegroundColor Yellow
+Write-Host "================ PROGRAM I/O ================" -ForegroundColor DarkGray
+
+$memLimitBytes = 1GB
+$mleKilled = $false
+$idx = 0
 
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
 $proc = Start-Process -FilePath $exe -WorkingDirectory $workDir -NoNewWindow -PassThru
 $handle = $proc.Handle
+
+while (-not $proc.HasExited) {
+    $curBytes = [Win32Mem]::GetCurrentWorkingSet($handle)
+    $peakBytes = [Win32Mem]::GetPeakWorkingSet($handle)
+    
+    if ($curBytes -gt $memLimitBytes -or $peakBytes -gt $memLimitBytes) {
+        $mleKilled = $true
+        try { $proc.Kill() } catch {}
+        break
+    }
+
+    $curMB = [math]::Round($curBytes / 1MB, 2)
+    $peakMB = [math]::Round($peakBytes / 1MB, 2)
+    $frame = $frames[$idx % $frames.Length]
+    $idx++
+
+    $liveText = "{0} [LIVE] Time: {1} ms | RAM: {2:N2} MB (Peak: {3:N2} MB / 1024 MB)" -f $frame, $sw.ElapsedMilliseconds, $curMB, $peakMB
+    [Console]::Write("$esc" + "7" + "$esc[$statusRow;1H" + "$esc[2K" + "$esc[33m$liveText$esc[0m" + "$esc" + "8")
+
+    Start-Sleep -Milliseconds 40
+}
+
 $proc.WaitForExit()
 $sw.Stop()
 
 $peakBytes = [Win32Mem]::GetPeakWorkingSet($handle)
 $peakMemMB = [math]::Round($peakBytes / 1MB, 2)
 $timeMs = $sw.ElapsedMilliseconds
-$exitCode = $proc.ExitCode
+$exitCode = if ($mleKilled) { -1 } else { $proc.ExitCode }
 $proc.Dispose()
 
-Write-Host "`n=============================================" -ForegroundColor DarkGray
-$status = if ($exitCode -eq 0) { "SUCCESS" } else { "RUNTIME ERROR" }
-$color = if ($exitCode -eq 0) { "Green" } else { "Red" }
+$finalLive = if ($mleKilled) {
+    "$esc[31m✖ [STOPPED] Memory Limit Exceeded (> 1024 MB)$esc[0m"
+} else {
+    "$esc[32m✔ [DONE] Time: $timeMs ms | Peak RAM: $($peakMemMB.ToString('N2')) MB$esc[0m"
+}
+[Console]::Write("$esc" + "7" + "$esc[$statusRow;1H" + "$esc[2K" + $finalLive + "$esc" + "8")
 
-Write-Host ("[{0}] Time: {1} ms | Peak Memory: {2:N2} MB | Exit Code: {3}" -f $status, $timeMs, $peakMemMB, $exitCode) -ForegroundColor $color
+Write-Host "`n=============================================" -ForegroundColor DarkGray
+if ($mleKilled) {
+    Write-Host ("[MEMORY LIMIT EXCEEDED] Killed (> 1024 MB) | Time: {0} ms | Peak Memory: {1:N2} MB" -f $timeMs, $peakMemMB) -ForegroundColor Red
+} else {
+    $status = if ($exitCode -eq 0) { "SUCCESS" } else { "RUNTIME ERROR" }
+    $color = if ($exitCode -eq 0) { "Green" } else { "Red" }
+    Write-Host ("[{0}] Time: {1} ms | Peak Memory: {2:N2} MB | Exit Code: {3}" -f $status, $timeMs, $peakMemMB, $exitCode) -ForegroundColor $color
+}
