@@ -167,9 +167,9 @@ $exitCode = if ($mleKilled) { -1 } else { $proc.ExitCode }
 $proc.Dispose()
 
 $finalLive = if ($mleKilled) {
-    "$esc[31m✖ [STOPPED] Memory Limit Exceeded (> 1024 MB)$esc[0m"
+    "$esc[31m[STOPPED] Memory Limit Exceeded (> 1024 MB)$esc[0m"
 } else {
-    "$esc[32m✔ [DONE] Time: $timeMs ms | Peak RAM: $($peakMemMB.ToString('N2')) MB$esc[0m"
+    "$esc[32m[DONE] Time: $timeMs ms | Peak RAM: $($peakMemMB.ToString('N2')) MB$esc[0m"
 }
 [Console]::Write("$esc" + "7" + "$esc[$statusRow;1H" + "$esc[2K" + $finalLive + "$esc" + "8")
 
